@@ -1,6 +1,6 @@
 ## 목적
 
-학습 목적의 실습 프로젝트로, MSA 환경에서의 서비스 간 흐름과 Docker Compose 기반 배포 구조 이해에 중점을 두었습니다.
+MSA 환경에서 서비스 간 흐름과 Docker Compose 기반 로컬 배포 구조를 이해하기 위한 학습 프로젝트입니다.
 
 ## 실행
 
@@ -8,20 +8,49 @@
 docker compose up -d
 ```
 
-## 동작 확인
+## 아키텍처
 
-```bash
-# 주문 요청
-docker compose exec frontend sh
-curl -X POST http://user-service:8080/order -H "Content-Type: application/json" -d '{"username":"user01","product":"Apple Pie"}'
-exit
+```mermaid
+graph LR
 
-# user-db 확인 (주문 시도 + 완료 이력)
-docker compose exec user-db mysql -uroot -ppassword --default-character-set=utf8mb4 user_db -e "SELECT * FROM user_orders;"
+  %% Frontend Layer
+  Frontend[Frontend (Nginx)]
 
-# order-db 확인 (주문 완료 기록)
-docker compose exec order-db mysql -uroot -ppassword --default-character-set=utf8mb4 order_db -e "SELECT * FROM orders;"
+  %% Services
+  UserService[User Service (Spring Boot)]
+  OrderService[Order Service (Spring Boot)]
 
-# Redis 캐시 확인
-docker compose exec redis redis-cli GET "order-status:user01-Apple Pie"
-```
+  %% Databases
+  UserDB[(user-db MySQL)]
+  OrderDB[(order-db MySQL)]
+  Redis[(Redis Cache)]
+
+  %% Flow
+  Frontend --> UserService
+  UserService --> OrderService
+
+  UserService --> UserDB
+  OrderService --> OrderDB
+  OrderService --> Redis
+
+  %% Styling hints (optional readability)
+  classDef service fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px;
+  classDef db fill:#fff3e0,stroke:#fb8c00,stroke-width:1px;
+  classDef cache fill:#f3e5f5,stroke:#8e24aa,stroke-width:1px;
+
+  class UserService,OrderService service;
+  class UserDB,OrderDB db;
+  class Redis cache;
+  ```
+
+
+## 한계 인지
+
+- 서비스 간 동기 호출로 인해 강한 결합 발생
+- Order Service 장애 시 User Service에도 영향 전파 가능
+- 분산 환경에서 데이터 정합성 보장 어려움
+
+## 향후 방향
+
+MSA 구조의 결합도를 낮추고, 서비스 간 독립성을 강화하기 위해
+Kafka 기반 이벤트 드리븐 아키텍처로 전환 예정입니다.
