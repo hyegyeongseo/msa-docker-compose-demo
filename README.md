@@ -14,11 +14,11 @@ docker compose up -d
 graph LR
 
   %% Frontend Layer
-  Frontend[Frontend (Nginx)]
+  Frontend["Frontend (Nginx)"]
 
   %% Services
-  UserService[User Service (Spring Boot)]
-  OrderService[Order Service (Spring Boot)]
+  UserService["User Service (Spring Boot)"]
+  OrderService["Order Service (Spring Boot)"]
 
   %% Databases
   UserDB[(user-db MySQL)]
@@ -41,7 +41,7 @@ graph LR
   class UserService,OrderService service;
   class UserDB,OrderDB db;
   class Redis cache;
-  ```
+```
 
 
 ## 한계 인지
